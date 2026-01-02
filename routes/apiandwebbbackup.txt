@@ -1,0 +1,159 @@
+<!-- 
+use App\Http\Controllers\api\AuthController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\api\PageController;
+use App\Http\Controllers\api\CityController;
+use App\Http\Controllers\api\RouteController;
+use App\Http\Controllers\api\CarController;
+
+use App\Http\Controllers\api\SearchCabController;
+
+// Public routes
+Route::get('/test', [AuthController::class, 'test']);
+Route::get('/generate-password', function () {
+    return bcrypt('admin123');
+});
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+
+// Protected routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    
+});
+// cities
+
+// Page routes
+Route::get('/pages/{slug}', [PageController::class, 'showBySlug']);
+
+Route::post('/search-cabs', [SearchCabController::class, 'searchCabs']);
+
+Route::get('/car-types', [CarController::class, 'VehicleTypes']);
+Route::get('/car-options', [CarController::class, 'carOptions']);
+Route::get('/car-options-by-cities', [CarController::class, 'cityWiseCarOptions']);
+
+Route::get('/local-car-options', [CarController::class, 'localCarOptions']);
+
+Route::get('/cities', [CityController::class, 'index']);
+Route::get('/airport-cities', [CityController::class, 'getAirportCities']);
+Route::get('/distance', [RouteController::class, 'getDistance']);
+
+
+
+// web.php
+
+
+use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\CityController;
+use App\Http\Controllers\VehicleTypeController;
+use App\Http\Controllers\VendorController;
+use App\Http\Controllers\CabController;
+use App\Http\Controllers\PackageController;
+use App\Http\Controllers\PackagePricingDetailController;
+use App\Http\Controllers\AirportController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\RouteController;
+use App\Http\Controllers\UserController;
+
+use App\Models\City;
+
+
+Route::get('/', [AuthController::class, 'loginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::resource('users', UserController::class);
+
+Route::get('/gp', function () {
+    return bcrypt('admin123');
+});
+
+
+Route::middleware(['auth'])->group(function () {
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('pages', PageController::class);
+  
+  Route::post('/ckeditor/upload', function (Request $request) {
+    if ($request->hasFile('upload')) {
+        $file = $request->file('upload');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $file->move(public_path('uploads/ckeditor/'), $filename);
+
+        return response()->json([
+            'uploaded' => 1,
+            'fileName' => $filename,
+            'url' => asset('uploads/ckeditor/' . $filename)
+        ]);
+    }
+
+    return response()->json(['uploaded' => 0, 'error' => ['message' => 'Upload failed']]);
+     })->name('ckeditor.upload');
+
+
+    // City Routes
+    Route::get('/cities', [CityController::class, 'index'])->name('cities.index');
+    Route::get('/cities/create', [CityController::class, 'create'])->name('cities.create');
+    Route::post('/cities/store', [CityController::class, 'store'])->name('cities.store');
+    Route::get('/cities/{city}/edit', [CityController::class, 'edit'])->name('cities.edit');
+    Route::put('/cities/{city}', [CityController::class, 'update'])->name('cities.update');
+    Route::delete('/cities/{city}', [CityController::class, 'destroy'])->name('cities.destroy');
+
+    // Vehicle Type Routes
+    Route::resource('vehicle-types', VehicleTypeController::class);
+    
+    // all packages
+    // Route::get('/packages/local', [PackageController::class, 'local'])->name('packages.local');
+    // Route::get('/packages/oneway', [PackageController::class, 'oneway'])->name('packages.oneway');
+    // Route::get('/packages/roundtrip', [PackageController::class, 'roundtrip'])->name('packages.roundtrip');
+    // Route::get('/packages/airport', [PackageController::class, 'airport'])->name('packages.airport');
+
+
+    // Vendor
+   
+      Route::resource('vendors', VendorController::class);
+
+      Route::get('/cities/search', function (Request $request) {
+        $query = $request->get('q', '');
+        $cities = City::where('name', 'like', "%{$query}%")
+            ->orderBy('name')
+            ->limit(10)
+            ->get(['id', 'name']);
+        return response()->json($cities);
+    })->name('cities.search');
+
+    // Cabs
+    Route::resource('cabs',CabController::class);
+
+    // Packages for all trip
+    Route::resource('packages', PackageController::class);
+
+    // Packages Price for local trip
+    Route::prefix('packages/{package}/pricing')->name('package_pricing.')->group(function () {
+        Route::get('/', [PackagePricingDetailController::class, 'index'])->name('index');
+        Route::get('/create', [PackagePricingDetailController::class, 'create'])->name('create');
+        Route::post('/', [PackagePricingDetailController::class, 'store'])->name('store');
+        Route::get('/{detail}/edit', [PackagePricingDetailController::class, 'edit'])->name('edit');
+        Route::put('/{detail}', [PackagePricingDetailController::class, 'update'])->name('update');
+        Route::delete('/{detail}', [PackagePricingDetailController::class, 'destroy'])->name('destroy');
+    });
+
+    // Airports
+
+    Route::resource('airports', AirportController::class);
+
+    // Booking 
+    Route::resource('bookings', BookingController::class);
+
+    Route::post('/bookings/{booking}/assign', [BookingController::class, 'assignVendor'])
+     ->name('bookings.assign');
+
+     Route::resource('routes', RouteController::class);
+
+
+}); -->

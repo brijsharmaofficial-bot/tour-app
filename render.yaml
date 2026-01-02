@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: laravel-api
+    env: php
+    plan: free
+    rootDir: backend
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader
+      php artisan key:generate
+      php artisan migrate --force
+    startCommand: php artisan serve --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: pgsql
+
+  - type: static
+    name: angular-frontend
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    publishDir: dist/frontend
+    envVars:
+      - key: API_URL
+        fromService:
+          name: laravel-api
+          type: web
+          property: url
+
+databases:
+  - name: app-db
+    plan: free

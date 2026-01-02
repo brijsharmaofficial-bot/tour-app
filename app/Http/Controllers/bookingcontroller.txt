@@ -1,0 +1,120 @@
+<?php
+namespace App\Http\Controllers;
+
+use App\Models\Booking;
+use App\Models\User;
+use App\Models\Vendor;
+use App\Models\Cab;
+use App\Models\Package;
+use App\Models\City;
+use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+
+class BookingController extends Controller
+{
+    public function index()
+    {
+        $bookings = Booking::with(['user','vendor','cab','fromCity','toCity'])
+            ->latest()->paginate(10);
+        return view('bookings.index', compact('bookings'));
+    }
+
+    public function create()
+    {
+        return view('bookings.create', [
+            'users' => User::all(),
+            'vendors' => Vendor::where('status', 'active')->get(),
+            'cabs' => Cab::where('status', 'active')->get(),
+            'packages' => Package::where('status', 'active')->get(),
+            'cities' => City::all()
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'from_city_id' => 'required|exists:cities,id',
+            'pickup_date' => 'required|date',
+            'pickup_time' => 'required',
+            'pickup_address' => 'required|string|max:255',
+            'total_estimated_fare' => 'required|numeric|min:0',
+            'status' => 'required|in:pending,assigned,in_progress,completed,cancelled',
+            'payment_status' => 'required|in:unpaid,paid'
+        ]);
+
+        Booking::create($request->all());
+        return redirect()->route('bookings.index')->with('success', 'Booking created successfully.');
+    }
+
+    public function show(Booking $booking)
+    {
+        $booking->load(['user','vendor','cab','package','fromCity','toCity']);
+        return view('bookings.show', compact('booking'));
+    }
+
+    public function edit(Booking $booking)
+    {
+        return view('bookings.edit', [
+            'booking' => $booking,
+            'users' => User::all(),
+            'vendors' => Vendor::where('status', 'active')->get(),
+            'cabs' => Cab::where('status', 'active')->get(),
+            'packages' => Package::where('status', 'active')->get(),
+            'cities' => City::all()
+        ]);
+    }
+
+    public function update(Request $request, Booking $booking)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'from_city_id' => 'required|exists:cities,id',
+            'pickup_date' => 'required|date',
+            'pickup_time' => 'required',
+            'pickup_address' => 'required|string|max:255',
+            'total_estimated_fare' => 'required|numeric|min:0',
+            'status' => 'required|in:pending,assigned,in_progress,completed,cancelled',
+            'payment_status' => 'required|in:unpaid,paid'
+        ]);
+
+        $booking->update($request->all());
+        return redirect()->route('bookings.index')->with('success', 'Booking updated successfully.');
+    }
+
+    public function destroy(Booking $booking)
+    {
+        $booking->delete();
+        return redirect()->route('bookings.index')->with('success', 'Booking deleted successfully.');
+    }
+
+    public function assignVendor(Request $request, Booking $booking)
+        {
+            $request->validate([
+                'vendor_id' => 'required|exists:vendors,id',
+                'cab_id' => 'required|exists:cabs,id',
+            ]);
+
+            $booking->update([
+                'vendor_id' => $request->vendor_id,
+                'cab_id' => $request->cab_id,
+                'status' => 'assigned',
+            ]);
+
+            return redirect()->route('bookings.index')->with('success', 'Vendor and Cab assigned successfully.');
+        }
+
+        public function invoice(Booking $booking)
+            {
+                // Optional: if you want PDF download
+                // $pdf = Pdf::loadView('bookings.invoice', compact('booking'));
+                // return $pdf->download('invoice-'.$booking->id.'.pdf');
+
+                // For now, render beautiful HTML
+                return view('bookings.invoice', compact('booking'));
+            }
+
+
+}
+
+?>
